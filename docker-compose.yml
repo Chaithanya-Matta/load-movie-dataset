@@ -14,21 +14,32 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  weaviate:
-    image: semitechnologies/weaviate:1.22.3
-    container_name: weaviate
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: chromadb
     restart: always
     ports:
-      - "8080:8080"
-    environment:
-      QUERY_DEFAULTS_LIMIT: 100
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
-      ENABLE_MODULES: 'text2vec-openai'
-      CLUSTER_HOSTNAME: 'node1'
+      - "8001:8000"
     volumes:
-      - weaviate_data:/var/lib/weaviate
+      - chroma_data:/chroma
+    environment:
+      - IS_PERSISTENT=TRUE      
+
+  fastapi-app:
+    build: .
+    container_name: fastapi-app
+    restart: always
+    depends_on:
+      - postgres
+      - chromadb
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql://admin:admin@postgres:5432/mydatabase"
+      CHROMADB_URL: "http://locahhost:8001"
+    volumes:
+      - .:/app
 
 volumes:
   postgres_data:
-  weaviate_data:
+  chroma_data:
