@@ -14,4 +14,5 @@ def home():
     # return {"message": "Welcome to the Movie Search API"}
     # return postgres_data_load.postgres_data_load()
     # return wikipedia.wiki_search()
-    return chroma_vector_db.test_chroma_connection()
+    # return chroma_vector_db.test_chroma_connection()
+    return postgres_data_load.query_movie_records()

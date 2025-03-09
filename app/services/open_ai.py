@@ -4,23 +4,7 @@ import openai
 
 openai.api_key = settings.OPENAI_API_KEY
 
-# client = OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url=settings.DEEPSEEK_URL)
-
-# client = OpenAI(settings.OPENAI_API_KEY)
 client = OpenAI()
-
-# def test_deepseek():
-#     response = client.chat.completions.create(
-#         model="deepseek-chat",
-#         messages=[
-#             {"role": "system", "content": "You are a helpful assistant"},
-#             {"role": "user", "content": "Hello"},
-#         ],
-#         stream=False
-#     )
-#     print(response.choices[0].message.content)
-
-#     return response.choices[0].message.content
 
 def test_openAI():
     completion = client.chat.completions.create(
@@ -43,6 +27,6 @@ def text_to_embeddings(text: str):
         model="text-embedding-3-small"
     )
 
-    print(response.data[0].embedding)
+    # print(response.data[0].embedding)
 
     return response.data[0].embedding

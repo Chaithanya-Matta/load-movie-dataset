@@ -1,23 +1,70 @@
-# from app.core.config import settings
 import chromadb
 from chromadb.config import Settings
+from app.core.config import settings
+from datetime import datetime   
+import chromadb.utils.embedding_functions as embedding_functions
+from app.services.open_ai import text_to_embeddings
 
-settings = Settings(chroma_server_host="localhost", chroma_server_http_port=8001)
-client = chromadb.Client(settings=settings)
+client = chromadb.HttpClient(
+    # host="chromadb",
+    host="host.docker.internal", 
+    port=8000,
+    settings=Settings(
+        allow_reset=True,
+        anonymized_telemetry=False
+    )
+)
+
+openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+    api_key=settings.OPENAI_API_KEY,
+    model_name="text-embedding-3-small"
+)
 
 def test_chroma_connection():
 
-    # List existing collections (should return an empty list if none exist)
-    collections = client.list_collections()
-    print("Available collections:", collections)
+    collection_name = "test_collection"
 
-    # Create a test collection
-    collection = client.create_collection(name="test_collection")
-    print("Collection created:", collection.name)
+    print(client.heartbeat())
 
-    # List collections again to confirm
+    client.delete_collection(collection_name)
+
     collections = client.list_collections()
-    print("Updated collections:", collections)
+    print("Collections:", collections)
+ 
+    # collection = client.get_collection("test_collection")
+
+    collection = client.create_collection(
+        name=collection_name,
+        # embedding_function=openai_ef,
+        metadata={
+            "description": "my first Chroma collection",
+            "created": str(datetime.now())
+        } 
+    )
+    document_text = "The Matrix is a sci-fi movie about a dystopian future."
+    embedding = text_to_embeddings(document_text)
+
+    print("Embeddings: ", embedding)
+
+    # Add some data
+    collection.add(
+        ids=["1"],
+        documents=[document_text],
+        embeddings=[embedding],
+        metadatas=[{"genre": "sci-fi"}]
+    )    
+
+    data = collection.get(
+        ids=["1"],
+        include=["embeddings"]
+    )
+
+    print("Queried Data: ", data)
+
+
+
+
+    # print("Collection created:", collection.configuration_json)
 
     return ""
 

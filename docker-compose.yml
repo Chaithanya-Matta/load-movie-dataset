@@ -13,17 +13,22 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - net
 
   chromadb:
     image: ghcr.io/chroma-core/chroma:latest
     container_name: chromadb
     restart: always
     ports:
-      - "8001:8000"
+      - "8000:8000"
     volumes:
       - chroma_data:/chroma
     environment:
-      - IS_PERSISTENT=TRUE      
+      # - IS_PERSISTENT=TRUE
+      - CHROMA_DB_DIR=/chroma
+    networks:
+      - net
 
   fastapi-app:
     build: .
@@ -33,13 +38,19 @@ services:
       - postgres
       - chromadb
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       DATABASE_URL: "postgresql://admin:admin@postgres:5432/mydatabase"
-      CHROMADB_URL: "http://locahhost:8001"
+      CHROMADB_URL: "http://locahhost:8000"
     volumes:
       - .:/app
+    networks:
+      - net
 
 volumes:
   postgres_data:
   chroma_data:
+
+networks:
+  net:
+    driver: bridge

@@ -1,16 +1,35 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, Column, Integer, String, BigInteger, Text
 import ast
 from app.core.config import settings
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 # PostgreSQL Connection Configurations
 DB_USER = settings.POSTGRES_DB_USER
 DB_PASSWORD = settings.POSTGRES_DB_PASSWORD
-DB_HOST = "localhost"  # or your cloud DB endpoint
+# DB_HOST = "localhost"  # or your cloud DB endpoint
+DB_HOST = "host.docker.internal"  # or your cloud DB endpoint
 DB_PORT = "5432"
 DB_NAME = "mydatabase"
 
 engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+class MovieNew(Base):
+    __tablename__ = "movie_new"
+
+    # id = Column(Integer, primary_key=True, index=True)
+    # original_title = Column(String)
+    # keywords = Column(String)
+    # genres = Column(String)
+
+    id = Column(BigInteger, primary_key=True)
+    original_title = Column(Text, nullable=True)
+    keywords = Column(Text, nullable=True)
+    genres = Column(Text, nullable=True)
 
 def postgres_data_load():
 
@@ -48,3 +67,21 @@ def convert_to_list(value):
     if isinstance(value, str):
         return value.split(", ")  # Split by ", " to form a list
     return []
+
+def query_movie_records():
+
+    query = "select id, original_title, keywords, genres from public.movie_new limit 10;"
+
+    with engine.connect() as conn:
+        result = conn.execute(text(query))
+
+        movies = [
+                {"id": row[0], "original_title": row[1], "keywords": row[2], "genres": row[3]}
+                for row in result
+            ]
+
+        for row in movies:
+
+            print(row)
+
+    return movies
