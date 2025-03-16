@@ -4,6 +4,7 @@ import ast
 from app.core.config import settings
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 
 # PostgreSQL Connection Configurations
 DB_USER = settings.POSTGRES_DB_USER
@@ -30,6 +31,9 @@ class MovieNew(Base):
     original_title = Column(Text, nullable=True)
     keywords = Column(Text, nullable=True)
     genres = Column(Text, nullable=True)
+
+    def __repr__(self):
+        return f"<Movie(id={self.id}, title={self.original_title}, genre={self.genres}, keywords={self.keywords})>"
 
 def postgres_data_load():
 
@@ -70,18 +74,54 @@ def convert_to_list(value):
 
 def query_movie_records():
 
-    query = "select id, original_title, keywords, genres from public.movie_new limit 10;"
+    query = "select id, original_title, keywords, genres, release_date from public.movie_new2 WHERE original_language = 'en' order by movie_new2.vote_average desc;"
 
     with engine.connect() as conn:
         result = conn.execute(text(query))
 
         movies = [
-                {"id": row[0], "original_title": row[1], "keywords": row[2], "genres": row[3]}
+                {"id": row[0], "original_title": row[1], "keywords": row[2], "genres": row[3], "release_year": (row[4].year)}
                 for row in result
             ]
+        
+        # print(movies[0].get("original_title"))
 
-        for row in movies:
+        # for row in movies:
 
-            print(row)
+            # print(row.get("keywords"))
+            # print(row.get("release_year"))
+
+    return movies
+
+def update_plot(plot: str, id:str):
+
+    query = f"UPDATE public.movie_new2 SET plot = '{plot}' WHERE id = {id}"
+
+    with engine.connect() as conn:
+        result = conn.execute(text(query))
+        conn.commit()
+
+        print(f"Rows affected: {result.rowcount}")
+
+    return ""
+
+def query_movie_title(ids: str):
+
+    query = f"select id, original_title from public.movie_new2 WHERE id in ({ids});"
+
+    with engine.connect() as conn:
+        result = conn.execute(text(query))
+
+        movies = [
+                {"id": row[0], "original_title": row[1]}
+                for row in result
+            ]
+        
+        # print(movies[0].get("original_title"))
+
+        # for row in movies:
+
+            # print(row.get("keywords"))
+            # print(row.get("release_year"))
 
     return movies
